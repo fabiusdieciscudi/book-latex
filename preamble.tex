@@ -1,0 +1,537 @@
+% Packages
+% \usepackage[LGR,T1]{fontenc}
+% \usepackage{pxfonts}
+\usepackage[turkish,swedish,dutch,german,french,english,latin,irish,italian]{babel}    % Non aggiungere il giapponese, rompe la sillabazione in italiano.
+\usepackage[expansion=all,protrusion=true]{microtype}
+\usepackage{titlesec}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage[lines=3, loversize=0.12, lraise=0]{lettrine}
+\usepackage{hyperref}
+\usepackage{xspace}
+\usepackage{fontspec}
+\usepackage{soul}                   % per l'evidenziatore
+\usepackage{xcolor}                 % per i colori
+\usepackage{enumitem}
+\usepackage{graphicx}               % per le illustrazioni
+\usepackage{adjustbox}
+\usepackage[indentfirst=false]{quoting}
+\usepackage{afterpage}
+\usepackage{tocloft}
+\usepackage{hyphenat}
+\usepackage{ifthen}
+\usepackage{pdftexcmds}             % per la condizionale sulla proprietà \purpose
+\usepackage{ragged2e}
+
+% Dimensioni pagina
+\geometry{%
+    paperwidth=15cm,%
+    paperheight=21cm,%
+    top=2.8cm,%
+    bottom=3.3cm,%
+    inner=2cm,%
+    outer=1.8cm,%
+}
+
+\raggedbottom
+
+% Capitoli: solo numero romano + titolo sulla stessa riga
+\renewcommand{\thechapter}{\Roman{chapter}}
+\setlength{\cftchapnumwidth}{3.6em}
+
+\titleformat{\chapter}% Il comando di sezionamento
+{\normalfont\Large\scshape\centering}% Stile per l'intero titolo
+{}%
+{0pt}% Spazio tra numerazione e testo
+{\thechapter. }% Prefisso al testo del titolo
+
+\titlespacing*{\chapter}{0pt}{50pt}{40pt}
+
+% HEADER / FOOTER
+\pagestyle{fancy}
+\fancyhf{}                                      % pulisce tutto
+\renewcommand{\headrulewidth}{0pt}              % nessuna linea sotto l'intestazione
+\fancyhead[RO]{\textsc{\leftmark}}              % pagina dispari: capitolo in maiuscoletto
+\fancyhead[LE]{\textsc{\mytitle}}               % pagina pari:    titolo libro in maiuscoletto
+
+\fancypagestyle{plain}{%
+    \fancyhf{}                                  % pulisce tutto
+    \renewcommand{\headrulewidth}{0pt}          % nessuna linea
+    \fancyfoot[LE,RO]{\thepage}                 % numero pagina all’esterno ANCHE sulla prima pagina del capitolo
+}
+
+\fancyfoot[LE,RO]{\thepage}                     % Footer numero pagina all'esterno
+
+% Elimina "Chapter 3", "Capitolo II", corsivo e maiuscolo
+\makeatletter
+\renewcommand\chaptermark[1]{\markboth{#1}{#1}} % solo il titolo del capitolo
+\renewcommand\sectionmark[1]{\markright{#1}}    % (se usi sezioni)
+\makeatother
+
+% Usiamo \rightmark per il titolo del libro (lo impostiamo una volta)
+\markright{\mytitle}
+
+\selectlanguage{italian}
+
+% Rimuoviamo tutti i bordi colorati e mettiamo una sottolineatura punteggiata
+\hypersetup{%
+    colorlinks  = false,                        % false = usa i box (ma noi li ridefiniamo)
+    pdfborder  = {0 0 0},                       % elimina completamente il bordo standard
+% Stile personalizzato per tutti i link interni
+    linkbordercolor = {white},                  % inutile, ma per sicurezza
+}
+
+\xspaceaddexceptions{\dots}
+\xspaceaddexceptions{»}
+\xspaceaddexceptions{]}
+
+% Definiamo il nuovo stile dei link: sottolineatura punteggiata (dotted)
+% Invece di usare colorlinks=true (che mette il colore al testo),
+% usiamo pdfborderstyle per ottenere una sottolineatura punteggiata
+
+\hypersetup{%
+    pdfborderstyle = {/S/D /W 1 /D [3 2]}       % S = underlined, D = dashed, W = spessore 1pt, pattern [3 2]
+}
+
+% Se preferisci la sottolineatura punteggiata ma in nero (più sobria):
+% \hypersetup{pdfborderstyle={/S/D /W 1 /D [3 2]}, linkbordercolor={black}}
+
+% --------------------- NOTE A PIÈ DI PAGINA IN CORSIVO (stesso corpo) ---------------------
+\makeatletter
+\renewcommand{\@makefntext}[1]{%
+    \parindent 1em\noindent
+    \hb@xt@1.8em{\hss\@makefnmark}%
+    \normalfont\itshape #1%
+}
+\makeatother
+
+\setlist{%
+    parsep   = 0pt,                             % spazio tra paragrafi dentro un item (se usi \par)
+    itemsep  = 0pt,                             % spazio verticale tra un item e l’altro ← QUESTO È IL PRINCIPALE
+}
+
+% \setmainfont{BaskervilleF}[%                    % Richiesto per small caps
+%     Extension       = .otf,%
+%     UprightFont     = *-Regular,%
+%     ItalicFont      = *-Italic,%
+%     BoldFont        = *-Bold,%
+%     BoldItalicFont  = *-BoldItalic,%
+% ]
+% \setlength{\headheight}{14pt}                   % Evita un warning per ogni pagina
+
+% \setmainfont{EBGaramond}
+% \microtypesetup{tracking={true, smallcaps}}   % For Garamond only
+\setmainfont{EBGaramond}[
+    Path            = fonts/EB_Garamond/static/,
+    Extension       = .ttf,
+    UprightFont     = *-Regular,
+    ItalicFont      = *-Italic,
+    BoldFont        = *-Medium,
+    BoldItalicFont  = *-MediumItalic,
+]
+
+\setlength{\parskip}{0pt}
+\setlength{\parindent}{0.3cm}
+
+\renewcommand{\cfttoctitlefont}{\relax}         % non stampa nulla
+\setlength{\cftbeforetoctitleskip}{-4em}        % elimina spazio sopra (regola se serve)
+\setlength{\cftaftertoctitleskip}{0em}          % elimina spazio sotto
+\renewcommand{\contentsname}{}                  % titolo vuoto
+\renewcommand{\cftchapfont}{\normalfont}        % capitoli
+\renewcommand{\cftchappagefont}{\normalfont}    % capitoli
+
+% Comandi personalizzati
+\newcommand{\threestars}{%
+    \par
+    \addvspace{1.2\baselineskip}%
+    {\centering\Large\bfseries***\par}
+    \addvspace{0.8\baselineskip}%
+%    \noindent%
+}
+
+% Separatore per le sezioni di entrelacement
+\newcommand{\entrelacement}{\threestars}
+
+% Separatore per gli stacchi temporali
+\newcommand{\temporaljump}{\bigskip}
+% \newcommand{\temporaljump}{\bigskip\noindent}
+
+\def\currentlanguage{italian}
+
+\makeatletter
+\newcommand{\myforeignlanguage@format@book}[2]{\foreignlanguage{#1}{#2}}%
+\newcommand{\myforeignlanguage@format@spellcheck}[3]{ @#1 #2 @#3}% Mantieni uno spazio prima di #1, per spezzare l'eventuale apostrofo precedente.
+\newcommand{\myforeignlanguage}[2]{%
+    \ifnum\pdf@strcmp{\detokenize\expandafter{\purpose}}{spellcheck}=0%
+        \protect\myforeignlanguage@spellcheck@safe{#1}{#2}%
+    \else
+        \myforeignlanguage@format@book{#1}{#2}%
+    \fi
+}%
+\newcommand{\myforeignlanguage@spellcheck@safe}[2]{%
+    \begingroup%
+    \edef\previouslanguage{\currentlanguage}%
+    \xdef\currentlanguage{#1}%
+    \myforeignlanguage@format@spellcheck{#1}{#2}{\previouslanguage}%
+    \xdef\currentlanguage{\previouslanguage}%
+    \endgroup%
+}%
+\makeatother
+
+\newcommand{\dutchname}[1]{\myforeignlanguage{dutch}{#1}}%
+\newcommand{\dutch}[1]{\textit{\myforeignlanguage{dutch}{#1}}}%
+\newcommand{\englishname}[1]{\myforeignlanguage{english}{#1}}%
+\newcommand{\english}[1]{\textit{\myforeignlanguage{english}{#1}}}%
+\newcommand{\frenchname}[1]{\myforeignlanguage{french}{#1}}%
+\newcommand{\french}[1]{\textit{\myforeignlanguage{french}{#1}}}%
+\newcommand{\germanname}[1]{\myforeignlanguage{german}{#1}}%
+\newcommand{\german}[1]{\textit{\myforeignlanguage{german}{#1}}}%
+\newcommand{\irishname}[1]{\myforeignlanguage{irish}{#1}}%
+\newcommand{\irish}[1]{\textit{\myforeignlanguage{irish}{#1}}}%
+\newcommand{\japanesename}[1]{\mbox{#1}}%
+\newcommand{\japanese}[1]{\textit{\mbox{#1}}}%
+\newcommand{\latinname}[1]{\myforeignlanguage{latin}{#1}}%
+\newcommand{\latin}[1]{\textit{\myforeignlanguage{latin}{#1}}}%
+\newcommand{\provencalname}[1]{\myforeignlanguage{french}{#1}}%
+\newcommand{\provencal}[1]{\textit{\myforeignlanguage{french}{#1}}}% FIXME
+\newcommand{\swedishname}[1]{\myforeignlanguage{swedish}{#1}}%
+\newcommand{\swedish}[1]{\textit{\myforeignlanguage{swedish}{#1}}}%
+\newcommand{\turkishname}[1]{\myforeignlanguage{turkish}{#1}}%
+\newcommand{\turkish}[1]{\textit{\myforeignlanguage{turkish}{#1}}}%
+
+\newcommand{\yellow}[1]{{\sethlcolor{yellow!25}\hl{#1}}}%
+
+\newcommand{\blankpage}{%
+    \clearpage
+    \thispagestyle{empty}%
+    \null
+    \clearpage
+}%
+
+\newboolean{illustrations}
+\setboolean{illustrations}{true}
+
+\newcommand{\illustration}[1]{%
+    \ifthenelse{\boolean{illustrations}}{%
+        \begin{center}%
+        \vspace*{\fill} % spazio elastico sopra
+        \adjustbox{max size={1\textwidth}{1\textheight}, center}{\includegraphics{#1}}%
+        \vspace*{\fill} % spazio elastico sotto (uguale a quello sopra)
+        \end{center}%
+        \clearpage
+    }{}
+}%
+
+\newcommand{\fullpageillustration}[2][1\textwidth]{%
+    \ifthenelse{\boolean{illustrations}}{%
+        \afterpage{%
+            \clearpage
+            \thispagestyle{empty}% or plain if you prefer page number
+            \null
+            \vfill
+            \begin{center}%
+            \adjustbox{max size={#1}{0.86\textheight},center}{\includegraphics[width=#1]{#2}}%
+            \end{center}%
+            \vfill
+            \clearpage
+        }%
+    }{}
+}%
+
+\newcommand{\afterpageillustration}[2][0.95\textwidth]{%
+    \ifthenelse{\boolean{illustrations}}{%
+        \afterpage{%
+            \clearpage
+            \thispagestyle{empty}%
+            \null
+            \vfill
+            \centering
+            \adjustbox{max size={#1}{#1}, center}{%
+                \includegraphics{#2}%
+            }%
+            \vfill
+            \clearpage
+        }%
+    }{}
+}%
+
+\newcommand{\afterpagetopillustration}[2][0.95\textwidth]{%
+    \ifthenelse{\boolean{illustrations}}{%
+        \afterpage{%
+            \clearpage
+            \noindent
+            \centering
+            \adjustbox{max size={#1}{\textheight}, center}{%
+                \includegraphics{#2}%
+            }%
+            \vspace{3em}%
+            \par
+        }%
+    }{}
+}%
+
+\newcommand{\poetry}[1]{%
+    \begin{quoting}%
+    \itshape
+    \begingroup
+    #1%
+    \endgroup
+    \end{quoting}%
+}%
+
+\newcommand{\quotationx}[2][\itshape]{%
+    \begin{quoting}%
+    #1%
+    \begingroup
+    #2%
+    \endgroup
+    \end{quoting}%
+}%
+
+\usepackage{relsize}
+
+\newcommand{\newspaper}[1]{%
+    \begin{quoting}%
+    \itshape%
+    \smaller[0.5]%
+    \begingroup
+    #1%
+    \endgroup
+    \end{quoting}%
+}%
+
+\makeatletter
+\newcommand{\email@format@audio}[5]{%
+    \begingroup%
+    \ifx\relax#5\relax%
+        #3. {#4}%
+    \else%
+        \spoken{#5}{#3. {#4}}{}%
+    \fi%
+    \endgroup%
+}%
+\newcommand{\email@format@book}[4]{%
+    \begin{quoting}%
+    \begingroup
+    \smaller[0.5]%
+    \englishname{To}: #2\\
+    \englishname{From}: #1\\
+    \englishname{Subject}: #3\\
+    {#4}%
+    \endgroup
+    \end{quoting}%
+}%
+
+\newcommand{\email}[5]{%
+    \ifnum
+        \pdf@strcmp{\detokenize\expandafter{\purpose}}{audio}=0 %
+        \email@format@audio{#1}{#2}{#3}{#4}{#5}
+    \else
+        \email@format@book{#1}{#2}{#3}{#4}
+    \fi
+}
+
+\newcommand{\note@format@audio}[1]{}%
+\newcommand{\note@format@book}[1]{%
+    \begin{quoting}[leftmargin=0pt,rightmargin=0pt]%
+    \color{red}%
+    \small
+    \itshape
+    \begingroup
+    #1%
+    \endgroup
+    \end{quoting}%
+}%
+
+\newcommand{\note}[1]{%
+    \ifnum%
+        \pdf@strcmp{\detokenize\expandafter{\purpose}}{audio}=0 %
+        \note@format@audio{#1}%
+    \else%
+        \note@format@book{#1}%
+    \fi%
+}%
+\makeatother
+
+% marginpar
+\newcommand{\comment}[1]{}%
+
+\newcommand{\ellipsis}{\ldots\xspace}%  % FIXME: mette spazio anche prima del » chiuso
+
+% Interruzione improvvisa di un discorso.
+\newcommand{\interruption}{---}
+
+\newcommand{\cover}[3]{%
+    \thispagestyle{empty} % no header, footer, or page number
+    \vspace*{\fill}%
+    \begin{center}%
+    {\normalfont\bfseries\centering\fontsize{27}{27}\selectfont #1}%
+    \end{center}%
+    \bigbreak
+    \begin{center}%
+    {#2}%
+    \end{center}%
+%    \vspace{1cm}%
+    \begin{center}%
+    \illustration{#3}%
+    \end{center}%
+    \vspace*{\fill}%
+    \clearpage
+    \thispagestyle{empty} % no header, footer, or page number
+}
+
+\newcommand{\disclaimer}{
+    \thispagestyle{empty} % no header, footer, or page number
+    \vspace*{\fill}
+    \begin{flushleft}%
+    \textit{%
+        Questa è un'opera di fantasia.
+        Nomi, personaggi, luoghi ed eventi sono prodotto dell'immaginazione dell’autore.
+        Qualsiasi somiglianza con persone reali, vive o morte, con eventi o luoghi esistenti è puramente casuale.
+    }
+    \end{flushleft}%
+    \clearpage
+}
+
+\newcommand{\epigraph}[1]{%
+    \cleardoublepage
+    \thispagestyle{empty} % no header, footer, or page number
+    \vspace*{\fill}%
+    \begin{flushright}%
+    \textit{#1}%
+    \end{flushright}%
+    \vspace*{\fill}%
+    \clearpage
+    \thispagestyle{empty} % no header, footer, or page number
+}
+
+% Comandi per i virgolettati
+% Variabile "globale" (ma meglio limitata al gruppo quando possibile)
+\newtoks\spokenAnteToks   % usiamo toks per evitare problemi con \edef/global
+
+% Resetta sempre all'inizio di un paragrafo o come preferisci
+%%%% \AtBeginDocument{\spokenAnteToks={}}   % o in \everypar, se serve
+
+\global\spokenAnteToks={}%
+
+\usepackage{xstring}
+
+\newcounter{dropcaplines}
+\setcounter{dropcaplines}{3}
+
+\makeatletter
+\newcommand{\dropcap@format@pdf}[2]{\lettrine[lines=\value{dropcaplines}]{#1}{#2}}%
+\newcommand{\dropcap@format@other}[2]{#1#2}%
+\newcommand{\dropcap}[2]{
+    \ifnum\pdf@strcmp{\detokenize\expandafter{\purpose}}{pdf}=0 %
+        \dropcap@format@pdf{#1}{#2}%
+    \else
+        \dropcap@format@other{#1}{#2}%
+    \fi
+}%
+\makeatother
+
+\makeatletter
+\newcommand{\mylettrine@format@pdf}[3]{\lettrine[lines=\value{dropcaplines},ante=#3]{#1}{#2}}%
+\newcommand{\mylettrine@format@other}[2]{#1#2}%
+\newcommand{\mylettrine}[3]{
+    \ifnum\pdf@strcmp{\detokenize\expandafter{\purpose}}{pdf}=0 %
+        \mylettrine@format@pdf{#1}{#2}{#3}%
+    \else
+        \mylettrine@format@other{#1}{#2}%
+    \fi
+}%
+\makeatother
+
+\NewDocumentCommand{\smartdropcap}{m}{%
+    \begingroup
+    \let\xspace\empty
+    \edef\temp{#1}%
+    \expandafter\endgroup
+    \expandafter\smartdropcapaux\expandafter{\temp}%
+}
+
+\NewDocumentCommand{\smartdropcapaux}{m}{%
+    \edef\arg{#1}%
+    \edef\firstletter{\directlua{tex.sprint(unicode.utf8.sub("\arg",1,1))}}%
+    \edef\remainder{\directlua{tex.sprint(unicode.utf8.sub("\arg",2))}}%
+    \mylettrine{\firstletter}{\MakeLowercase{\remainder}}{\the\spokenAnteToks}%
+}
+
+\makeatletter
+\newcommand{\acronym@format@book}[1]{\textsc{\lowercase{{#1}}}}%
+\newcommand{\acronym}[1]{%
+    \ifnum\pdf@strcmp{\detokenize\expandafter{\purpose}}{pdf}=0 %
+        \acronym@format@book{#1}%
+    \else%
+        {#1}%
+    \fi%
+}%
+
+\newcommand{\spoken@format@book}[1]{%
+    \begingroup
+    \edef\temparg{\detokenize{#1}}%
+    \IfBeginWith{\temparg}{\detokenize{\smartdropcap}}{\global\spokenAnteToks={«}}{«}%
+    \expandafter\endgroup
+    #1»%
+    \global\spokenAnteToks={}%
+}
+\newcommand{\spoken@format@audio}[3]{\par[#1\ifx\relax#3\relax\else, #3\fi]: #2\par}%
+\newcommand{\spoken}[3]{%
+    \ifnum\pdf@strcmp{\detokenize\expandafter{\purpose}}{audio}=0 %
+        \spoken@format@audio{#1}{#2}{#3}%
+    \else%
+        \spoken@format@book{#2}%
+    \fi%
+}%
+
+\newcommand{\thought@format@book}[1]{``#1''}%
+\newcommand{\thought@format@audio}[3]{\par[#1\ifx\relax#3\relax\else, #3\fi]: #2\par}%
+\newcommand{\thought}[3]{%
+    \ifnum\pdf@strcmp{\detokenize\expandafter{\purpose}}{audio}=0 %
+        \thought@format@audio{#1}{#2}{#3}%
+    \else%
+        \thought@format@book{#2}%
+    \fi%
+}
+\makeatother
+
+% Comando base con parametri utili
+\newcommand{\letterstyle}{%
+    \noindent
+    \RaggedRight
+    \leftskip=1cm          % margine sinistro (modifica a piacere)
+    \parindent=0pt
+    \hyphenpenalty=10000     % disabilita la sillabazione (valore molto alto)
+    \exhyphenpenalty=10000   % anche per sillabazione forzata
+    \pretolerance=9999
+    \tolerance=9999
+    \emergencystretch=3em
+%    \setstretch{2}
+}
+
+\newcommand{\letter}[1]{%
+    \begingroup%
+    \bigskip
+    \letterstyle
+    \itshape
+    \par#1\par%
+    \bigskip
+    \endgroup%
+}
+
+\newcommand{\sxx}[2][]{\spoken{default}{#2}{#1}}%
+\newcommand{\sxa}[2][]{\spoken{senza nome a}{#2}{#1}}%
+\newcommand{\sxb}[2][]{\spoken{senza nome b}{#2}{#1}}%
+\newcommand{\sxc}[2][]{\spoken{senza nome c}{#2}{#1}}%
+\newcommand{\sxd}[2][]{\spoken{senza nome d}{#2}{#1}}%
+\newcommand{\sxe}[2][]{\spoken{senza nome e}{#2}{#1}}%
+\newcommand{\sxf}[2][]{\spoken{senza nome f}{#2}{#1}}%
+\newcommand{\txx}[2][]{\thought{default}{#2}{#1}}%
+% citazione diretta breve
+\newcommand{\sq}[1]{``#1''}%
+
+\newcommand{\Pffft}{Pffft\ellipsis}
+\newcommand{\Mmmh}{Mmmh\ellipsis}
+\newcommand{\beh}{be'}
+\newcommand{\Beh}{Be'}
