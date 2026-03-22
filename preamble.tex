@@ -22,6 +22,7 @@
 \usepackage{ifthen}
 \usepackage{pdftexcmds}             % per la condizionale sulla proprietà \purpose
 \usepackage{ragged2e}
+\usepackage{luacode}
 
 % Dimensioni pagina
 \geometry{%
@@ -446,15 +447,44 @@
 \NewDocumentCommand{\smartdropcap}{m}{%
     \begingroup
     \let\xspace\empty
-    \edef\temp{#1}%
-    \expandafter\endgroup
-    \expandafter\smartdropcapaux\expandafter{\temp}%
+    \endgroup
+    \smartdropcapaux{#1}%
+}
+
+%\NewDocumentCommand{\smartdropcapaux}{m}{%
+%    \edef\arg{#1}%
+%    \edef\firstletter{\directlua{tex.sprint(unicode.utf8.sub("\arg",1,1))}}%
+%    \edef\remainder{\directlua{tex.sprint(unicode.utf8.sub("\arg",2))}}%
+%    \mylettrine{\firstletter}{\MakeLowercase{\remainder}}{\the\spokenAnteToks}%
+%}
+
+\directlua{
+    function smartdropcap_split(box_id)
+        local n = tex.box[box_id].head
+        local first = nil
+        local rest = {}
+        local count = 0
+        while n do
+            if n.id == node.id("glyph") then
+                if first == nil then
+                    first = unicode.utf8.char(n.char)
+                else
+                    count = count + 1
+                    rest[count] = unicode.utf8.char(n.char)
+                end
+            end
+            n = n.next
+        end
+        smartdropcap_first = first or ""
+        smartdropcap_rest  = table.concat(rest)
+    end
 }
 
 \NewDocumentCommand{\smartdropcapaux}{m}{%
-    \edef\arg{#1}%
-    \edef\firstletter{\directlua{tex.sprint(unicode.utf8.sub("\arg",1,1))}}%
-    \edef\remainder{\directlua{tex.sprint(unicode.utf8.sub("\arg",2))}}%
+    \setbox0=\hbox{#1}%
+    \directlua{smartdropcap_split(0)}%
+    \edef\firstletter{\directlua{tex.sprint(smartdropcap_first)}}%
+    \edef\remainder{\directlua{tex.sprint(smartdropcap_rest)}}%
     \mylettrine{\firstletter}{\MakeLowercase{\remainder}}{\the\spokenAnteToks}%
 }
 
