@@ -25,6 +25,7 @@
 \usepackage{pdftexcmds}             % per la condizionale sulla proprietà \purpose
 \usepackage{ragged2e}
 \usepackage{luacode}
+\usepackage{xr-hyper}
 
 % Dimensioni pagina
 \geometry{%
@@ -153,10 +154,16 @@
 }
 
 % Separatore per le sezioni di entrelacement
-\newcommand{\entrelacement}{\threestars}
+\newcommand{\entrelacement}[1][]{%
+    \threestars%
+    \ifx\\#1\\\else\episode{#1}\fi%
+}%
 
 % Separatore per gli stacchi temporali
-\newcommand{\temporaljump}{\bigskip}
+\newcommand{\temporaljump}[1][]{%
+    \bigskip%
+    \ifx\\#1\\\else\episode{#1}\fi%
+}%
 % \newcommand{\temporaljump}{\bigskip\noindent}
 
 \def\currentlanguage{italian}
@@ -197,6 +204,8 @@
 \newcommand{\japanese}[1]{\textit{\mbox{#1}}}%
 \newcommand{\latinname}[1]{\myforeignlanguage{latin}{#1}}%
 \newcommand{\latin}[1]{\textit{\myforeignlanguage{latin}{#1}}}%
+\newcommand{\ligurianname}[1]{\mbox{#1}}%
+\newcommand{\ligurian}[1]{\textit{\mbox{#1}}}%
 \newcommand{\provencalname}[1]{\myforeignlanguage{french}{#1}}%
 \newcommand{\provencal}[1]{\textit{\myforeignlanguage{french}{#1}}}% FIXME
 \newcommand{\spanishname}[1]{\myforeignlanguage{spanish}{#1}}%
@@ -320,10 +329,13 @@
 \newcommand{\email@format@book}[4]{%
     \begin{quoting}%
     \begingroup
+    \setlength{\parindent}{0pt}%
     \smaller[0.5]%
     \englishname{To}: #2\\
     \englishname{From}: #1\\
-    \englishname{Subject}: #3\\
+    \englishname{Subject}: #3
+    \vspace{0.4\baselineskip}
+
     {#4}%
     \endgroup
     \end{quoting}%
@@ -393,8 +405,8 @@
     \begin{flushleft}%
     \textit{%
         Questa è un'opera di fantasia.
-        Nomi, personaggi, luoghi ed eventi sono prodotto dell'immaginazione dell’autore.
-        Qualsiasi somiglianza con persone reali, vive o morte, con eventi o luoghi esistenti è puramente casuale.
+        Nomi, personaggi ed eventi sono prodotto dell'immaginazione dell’autore.
+        Qualsiasi somiglianza con persone reali, vive o morte, con eventi esistenti è puramente casuale.
     }
     \end{flushleft}%
     \clearpage
@@ -530,6 +542,29 @@
         \thought@format@book{#2}%
     \fi%
 }
+
+\newcommand{\chatconversation}[1]{%
+    \begin{quoting}%
+    \setlength{\parindent}{0pt}%
+    \smaller[0.5]%
+    #1%
+    \end{quoting}%
+}%
+
+\newcommand{\chat@format@book}[2]{
+    \begingroup%
+    {#1: #2}%
+    \endgroup%
+}%
+\newcommand{\chat@format@audio}[3]{\par[#1\ifx\relax#3\relax\else, #3\fi]: #2\par}%
+\newcommand{\chat}[3]{%
+    \ifnum\pdf@strcmp{\detokenize\expandafter{\purpose}}{audio}=0 %
+        \chat@format@audio{#1}{#2}{#3}%
+    \else%
+        \chat@format@book{#1}{#2}%
+    \fi%
+}
+
 \makeatother
 
 % Comando base con parametri utili
@@ -558,6 +593,26 @@
 
 \newcommand{\newspapername}[1]{#1}%
 
+\makeatletter
+\newcommand{\chapterref}[1]{%
+    \sanitize{#1}%
+    \edef\tmp@target{ROMANZO-cap:\tmp@result}%
+    \expandafter\hyperref\expandafter[\tmp@target]{``#1''}%
+}
+\makeatother
+
+\newcommand{\chronomonth}[2]{%
+\textbf{#1}%
+\begin{itemize}%
+#2%
+\end{itemize}%
+}%
+
+\newcommand{\chronochapter}[3]{\item \textbf{{#1}: ``#2''} (#3)}%
+
+\newcommand{\chronoother}[2]{\item {\smaller {#1}: {#2}}}%
+\newcommand{\chronofeast}[2]{\item {\smaller {\color{red} #1: #2}}}%
+
 \newcommand{\sxx}[2][]{\spoken{default}{#2}{#1}}%
 \newcommand{\sxa}[2][]{\spoken{senza nome a}{#2}{#1}}%
 \newcommand{\sxb}[2][]{\spoken{senza nome b}{#2}{#1}}%
@@ -568,6 +623,31 @@
 \newcommand{\txx}[2][]{\thought{default}{#2}{#1}}%
 % citazione diretta breve
 \newcommand{\sq}[1]{``#1''}%
+
+\makeatletter
+\newcommand{\sanitize}[1]{%
+    \StrSubstitute{#1}{'}{}[\tmp@a]%
+    \StrSubstitute{\tmp@a}{,}{}[\tmp@a]%
+    \StrSubstitute{\tmp@a}{/}{-}[\tmp@a]%
+    \StrSubstitute{\tmp@a}{ }{-}[\tmp@b]%
+    \StrSubstitute{\tmp@b}{--}{-}[\tmp@c]%
+    \edef\tmp@result{\tmp@c}%
+}
+
+\let\originalchapter\chapter
+\renewcommand{\chapter}[1]{%
+    \originalchapter{#1}%
+    \sanitize{#1}%
+    \edef\tmp@label{cap:\tmp@result}%
+    \expandafter\label\expandafter{\tmp@label}%
+    \label{tocchap.\arabic{chapter}}% Needed by the TOC inside Note di lavoro
+}
+\makeatother
+
+\newcommand{\episode}[1]{%
+    \refstepcounter{section}%
+    \addcontentsline{toc}{section}{#1}%
+}%
 
 \newcommand{\Pffft}{Pffft\ellipsis}
 \newcommand{\Mmmh}{Mmmh\ellipsis}
