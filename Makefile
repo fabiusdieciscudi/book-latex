@@ -9,6 +9,9 @@ MAIN_TEX    := "$(TITLE_ESC).tex"
 MAIN_PDF    := "$(TARGET)/$(TITLE_ESC).pdf"
 NOTES_TEX   := "Note di lavoro.tex"
 NOTES_PDF   := "$(TARGET)/Note di lavoro.pdf"
+CONTEXT_TEX := "Contesto informativo.tex"
+CONTEXT_HTML:= "Contesto_informativo.html"
+CONTEXT_TXT := "Contesto informativo.txt"
 
 HTML_DIR    := $(TARGET)/$(subst ",,$(subst $(space),_,$(TITLE)))-epub/OEBPS
 HTML2_DIR   := $(TARGET)/Note_di_lavoro-epub/OEBPS
@@ -45,6 +48,10 @@ echo-check: txt-spell
 stats: txt
 	BookAssistant stats $(TARGET)/txt --latex-toc $(TARGET)/$(TITLE).toc
 
+context: prepare
+	-make4ht -l -c book-latex/make4ht-txt-info.cfg -d $(HTML_DIR) -B $(HTML_DIR) $(CONTEXT_TEX) "xhtml" " -cunihtf -utf8" ""
+	BookAssistant html2txt --output $(TXT_DIR)/$(CONTEXT_TXT) $(HTML_DIR)/$(CONTEXT_HTML)
+
 ################################ PDF ###########################################################################################################################
 pdf: prepare
 	cd $(TARGET) && lualatex '\def\purpose{pdf}\input{"$(TITLE).tex"}' && lualatex '\def\purpose{pdf}\input{"$(TITLE).tex"}'
@@ -74,13 +81,13 @@ txt-files: $(TXT_FILES)
 
 html: prepare
 	@mkdir -p $(HTML_DIR)
-	make4ht -l -c book-latex/make4ht-txt.cfg -d $(HTML_DIR) -B $(HTML_DIR) $(MAIN_TEX) "xhtml" " -cunihtf -utf8" ""
+	-make4ht -l -c book-latex/make4ht-txt.cfg -d $(HTML_DIR) -B $(HTML_DIR) $(MAIN_TEX) "xhtml" " -cunihtf -utf8" ""
 
 # È necessario il passo intermedio in HTML perché html2txt non tocca i file non modificati.
 # Questo fa sì che al passaggio successivo vengano rigenerati solo i file audio necessario.
 .INTERMEDIATE:
 $(TXT_DIR)/%.txt: $(HTML_DIR)/%.html
-	@./book-latex/html2txt.py $< $@
+	BookAssistant html2txt --output $@ $<
 
 ################################ TXT SPELLCHECK FILES ##########################################################################################################
 HTML_SPELL_DIR   := $(TARGET)/html-spellcheck
@@ -97,13 +104,13 @@ txt-spell-files: $(TXT_SPELL_FILES)
 
 html-spell: prepare
 	@mkdir -p $(HTML_SPELL_DIR)
-	make4ht -l -c book-latex/make4ht-spellcheck.cfg -d $(HTML_SPELL_DIR) -B $(HTML_SPELL_DIR) $(MAIN_TEX) "xhtml" " -cunihtf -utf8" ""
+	-make4ht -l -c book-latex/make4ht-spellcheck.cfg -d $(HTML_SPELL_DIR) -B $(HTML_SPELL_DIR) $(MAIN_TEX) "xhtml" " -cunihtf -utf8" ""
 
 # È necessario il passo intermedio in HTML perché html2txt non tocca i file non modificati.
 # Questo fa sì che al passaggio successivo vengano rigenerati solo i file audio necessario.
 .INTERMEDIATE:
 $(TXT_SPELL_DIR)/%.txt: $(HTML_SPELL_DIR)/%.html
-	@./book-latex/html2txt.py $< $@
+	BookAssistant html2txt --output $@ $<
 
 ################################ TXT AUDIO FILES ###############################################################################################################
 HTML_AUDIO_DIR   := $(TARGET)/html-audio
@@ -126,7 +133,7 @@ html-audio: prepare
 # Questo fa sì che al passaggio successivo vengano rigenerati solo i file audio necessario.
 .INTERMEDIATE:
 $(TXT_AUDIO_DIR)/%.txt: $(HTML_AUDIO_DIR)/%.html
-	@./book-latex/html2txt.py $< $@
+	BookAssistant html2txt --output $@ $<
 
 ################################ AUDIO #########################################################################################################################
 AUDIO_DIR   := $(TARGET)/audio
