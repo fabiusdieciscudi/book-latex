@@ -626,20 +626,33 @@
 
 \makeatletter
 \newcommand{\sanitize}[1]{%
-    \StrSubstitute{#1}{'}{}[\tmp@a]%
+    \begingroup
+    \let\xspace\empty
+    \let\englishname\@firstofone
+    \let\ligurianname\@firstofone
+    \let\latinname\@firstofone
+    \let\provencalname\@firstofone
+    \let\spanishname\@firstofone
+    \let\newspapername\@firstofone
+    \let\protect\@unexpandable@protect
+    \protected@edef\tmp@expanded{#1}%
+    \StrSubstitute{\tmp@expanded}{'}{}[\tmp@a]%
     \StrSubstitute{\tmp@a}{,}{}[\tmp@a]%
     \StrSubstitute{\tmp@a}{/}{-}[\tmp@a]%
     \StrSubstitute{\tmp@a}{ }{-}[\tmp@b]%
     \StrSubstitute{\tmp@b}{--}{-}[\tmp@c]%
-    \edef\tmp@result{\tmp@c}%
+    \xdef\tmp@result{\tmp@c}%
+    \endgroup
 }
 
 \let\originalchapter\chapter
 \renewcommand{\chapter}[1]{%
     \originalchapter{#1}%
+    \begingroup
     \sanitize{#1}%
     \edef\tmp@label{cap:\tmp@result}%
     \expandafter\label\expandafter{\tmp@label}%
+    \endgroup
     \label{tocchap.\arabic{chapter}}% Needed by the TOC inside Note di lavoro
 }
 \makeatother
