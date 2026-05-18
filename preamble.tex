@@ -27,6 +27,8 @@
 \usepackage{luacode}
 \usepackage{xr-hyper}
 
+\newcommand{\mytitle}{Titolo temporaneo}
+
 % Dimensioni pagina
 \geometry{%
     paperwidth=15cm,%
@@ -42,6 +44,11 @@
 % Capitoli: solo numero romano + titolo sulla stessa riga
 \renewcommand{\thechapter}{\Roman{chapter}}
 \setlength{\cftchapnumwidth}{3.6em}
+
+\newcommand{\chapterwithsummary}[3]{%
+    \chapter{#1}
+    #3
+}
 
 \titleformat{\chapter}% Il comando di sezionamento
 {\normalfont\Large\scshape\centering}% Stile per l'intero titolo
@@ -154,17 +161,11 @@
 }
 
 % Separatore per le sezioni di entrelacement
-\newcommand{\entrelacement}[1][]{%
-    \threestars%
-    \ifx\\#1\\\else\episode{#1}\fi%
-}%
+\newcommand{\entrelacement}{\threestars}%
 
 % Separatore per gli stacchi temporali
-\newcommand{\temporaljump}[1][]{%
-    \bigskip%
-    \ifx\\#1\\\else\episode{#1}\fi%
-}%
-% \newcommand{\temporaljump}{\bigskip\noindent}
+\newcommand{\temporaljump}[1][]{\bigskip}%
+%\noindent
 
 \def\currentlanguage{italian}
 
@@ -657,15 +658,15 @@
 }
 \makeatother
 
-\newcommand{\episode}[1]{%
-    \refstepcounter{section}%
-    \addcontentsline{toc}{section}{#1}%
-}%
-
 \makeatletter
-\newcommand{\tocwithepisodes}[1]{%
-    \section{Indice del romanzo con episodi}%
-    \setcounter{tocdepth}{2}%
+    \newcommand{\tocwithepisodes}[1]{%
+    \setlength{\cftpartindent}{0pt}
+    \setlength{\cftchapindent}{0pt}
+    \setlength{\cftsecindent}{10pt}
+    \setlength{\cftsubsecindent}{20pt}
+    \setlength{\cftsubsubsecindent}{30pt}
+    \section{Sceneggiatura}%
+    \setcounter{tocdepth}{4}%
     \let\originalcontentsline\contentsline
     \renewcommand{\contentsline}[4]{%
         \def\tmp@target{##4}%
@@ -679,6 +680,86 @@
     \let\contentsline\originalcontentsline
 }
 \makeatother
+
+\usepackage{xkeyval}
+
+\usepackage{etoolbox}
+\makeatletter
+\newcommand{\keyAndValue}[2]{%
+    \ifblank{#2}{}{%
+    \ifblank{#1}{#2}{#1: #2}%
+    }%
+}
+\define@key{scenemeta}{name}{\def\scenemeta@name{#1}}
+\define@key{scenemeta}{setting}{\def\scenemeta@setting{#1}}
+\define@key{scenemeta}{date}{\def\scenemeta@date{#1}}
+\define@key{scenemeta}{time}{\def\scenemeta@time{#1}}
+
+\newcommand{\scene}[1][]{%
+    \def\scenemeta@name{}%
+    \def\scenemeta@setting{}%
+    \def\scenemeta@date{}%
+    \def\scenemeta@time{}%
+    \setkeys{scenemeta}{#1}%
+    \refstepcounter{section}%
+    \addcontentsline{toc}{section}{
+        \scenemeta@name\\
+        {\small\textit{\scenemeta@date\xspace\scenemeta@time\\\scenemeta@setting}}
+    }%
+}
+\define@key{beatmeta}{name}{\def\beatmeta@name{#1}}
+\define@key{beatmeta}{driver}{\def\beatmeta@driver{#1}}
+\define@key{beatmeta}{pov}{\def\beatmeta@pov{#1}}
+
+\newcommand{\beat}[1][]{%
+    \def\beatmeta@name{}%
+    \def\beatmeta@driver{}%
+    \def\beatmeta@pov{}%
+    \setkeys{beatmeta}{#1}%
+    \refstepcounter{subsection}%
+    \addcontentsline{toc}{subsection}{
+        {\small\keyAndValue{pov}{\beatmeta@pov}\xspace\beatmeta@name}
+    }%
+}
+
+\define@key{shotmeta}{focus}{\def\shotmeta@focus{#1}}
+\define@key{shotmeta}{pov}{\def\shotmeta@pov{#1}}
+\define@key{shotmeta}{sense}{\def\shotmeta@sense{#1}}
+\define@key{shotmeta}{framing}{\def\shotmeta@framing{#1}}
+
+\newcommand{\shot}[1][]{%
+    \def\shotmeta@focus{}%
+    \def\shotmeta@pov{}%
+    \def\shotmeta@sense{}%
+    \def\shotmeta@framing{}%
+    \setkeys{shotmeta}{#1}%
+    \refstepcounter{subsubsection}%
+    \addcontentsline{toc}{subsubsection}{
+        {\small\keyAndValue{}{\shotmeta@framing}\xspace\keyAndValue{}{\shotmeta@pov}\xspace\keyAndValue{
+focus}{\shotmeta@focus}}
+    }%
+}
+\makeatother
+
+\newcommand{\sceneToday}{}
+
+% Titolo, autore, illustrazione copertina, epigrafe, file capitoli
+\newcommand{\mybook}[5]{
+    \title{#1}
+    \author{#2i}
+    \begin{document}
+    \cover{#1}{#2}{#3}
+    \disclaimer
+    \epigraph{#4}
+    \input{#5}
+    \cleardoublepage
+    \blankpage
+    \cleardoublepage
+    \addcontentsline{toc}{chapter}{Indice}
+    \setcounter{tocdepth}{0}
+    \tableofcontents
+    \end{document}
+}
 
 \newcommand{\Pffft}{Pffft\ellipsis}
 \newcommand{\Mmmh}{Mmmh\ellipsis}
