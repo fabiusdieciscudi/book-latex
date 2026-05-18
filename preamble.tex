@@ -602,7 +602,7 @@
 \makeatother
 
 \newcommand{\chronomonth}[2]{%
-\textbf{#1}%
+\subsection{#1}%
 \begin{itemize}%
 #2%
 \end{itemize}%
@@ -661,6 +661,24 @@
     \refstepcounter{section}%
     \addcontentsline{toc}{section}{#1}%
 }%
+
+\makeatletter
+\newcommand{\tocwithepisodes}[1]{%
+    \section{Indice del romanzo con episodi}%
+    \setcounter{tocdepth}{2}%
+    \let\originalcontentsline\contentsline
+    \renewcommand{\contentsline}[4]{%
+        \def\tmp@target{##4}%
+        \StrSubstitute{\tmp@target}{chapter.}{tocchap.}[\tmp@target]%
+        \originalcontentsline{##1}{##2}{##3}{ROMANZO-\tmp@target}%
+    }%
+    \begingroup
+    \makeatletter
+    \InputIfFileExists{#1.toc}{}{}%
+    \endgroup
+    \let\contentsline\originalcontentsline
+}
+\makeatother
 
 \newcommand{\Pffft}{Pffft\ellipsis}
 \newcommand{\Mmmh}{Mmmh\ellipsis}
