@@ -746,18 +746,20 @@ focus}{\shotmeta@focus}}
 % Titolo, autore, illustrazione copertina, epigrafe, file capitoli
 \newcommand{\mybook}[5]{
     \title{#1}
-    \author{#2i}
+    \author{#2}
     \begin{document}
-    \cover{#1}{#2}{#3}
-    \disclaimer
-    \epigraph{#4}
-    \input{#5}
-    \cleardoublepage
-    \blankpage
-    \cleardoublepage
-    \addcontentsline{toc}{chapter}{Indice}
-    \setcounter{tocdepth}{0}
-    \tableofcontents
+        \frontmatter
+        \cover{#1}{#2}{#3} % FIXME: maketitle?
+        \disclaimer
+        \epigraph{#4}
+        \mainmatter
+        \input{#5}
+        \cleardoublepage
+        \blankpage
+        \cleardoublepage
+        \addcontentsline{toc}{chapter}{Indice}
+        \setcounter{tocdepth}{0}
+        \tableofcontents
     \end{document}
 }
 
