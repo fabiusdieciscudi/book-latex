@@ -26,16 +26,17 @@
 \usepackage{ragged2e}
 \usepackage{luacode}
 \usepackage{xr-hyper}
+\usepackage[a4,center,frame,cam,noinfo]{crop}  % Non per versione definitiva!
 
 \newcommand{\mytitle}{Titolo temporaneo}
 
 % Dimensioni pagina
 \geometry{%
     paperwidth=15cm,%
-    paperheight=21cm,%
-    top=2.8cm,%
-    bottom=3.3cm,%
-    inner=2cm,%
+    paperheight=22cm,%
+    top=2.0cm,%
+    bottom=2.4cm,%
+    inner=2.5cm,%
     outer=1.8cm,%
 }
 
@@ -140,6 +141,18 @@
     BoldFont        = *-Medium,
     BoldItalicFont  = *-MediumItalic,
 ]
+
+\makeatletter
+\renewcommand\normalsize{%
+    \@setfontsize\normalsize{10.8pt}{12.6pt}%
+    \abovedisplayskip 10pt plus 2pt minus 5pt
+    \abovedisplayshortskip \z@ plus 3pt
+    \belowdisplayshortskip 6pt plus 3pt minus 3pt
+    \belowdisplayskip \abovedisplayskip
+    \let\@listi\@listI
+}
+\makeatother
+\AtBeginDocument{\normalsize}
 
 \setlength{\parskip}{0pt}
 \setlength{\parindent}{0.3cm}
