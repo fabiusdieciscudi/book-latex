@@ -39,11 +39,11 @@ prepare: $(TARGET)
 spellcheck: txt-spell
 	BookAssistant spellcheck $(DEBUG) --dict config/Dizionario.txt --dict Dizionario.txt target/txt-spellcheck
 
-check-guillemets: txt-spell
-	BookAssistant check-guillemets $(DEBUG) target/txt-spellcheck
+check-guillemets: txt
+	BookAssistant check-guillemets $(DEBUG) target/txt
 
-echo-check: txt-spell
-	BookAssistant echo $(DEBUG) target/txt-spellcheck
+echo-check: txt
+	BookAssistant echo $(DEBUG) target/txt
 
 stats: txt
 	BookAssistant stats $(TARGET)/txt --latex-toc $(TARGET)/$(TITLE).toc
