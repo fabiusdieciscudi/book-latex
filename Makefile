@@ -7,14 +7,15 @@ DEBUG       := # --debug
 
 MAIN_TEX    := "$(TITLE_ESC).tex"
 MAIN_PDF    := "$(TARGET)/$(TITLE_ESC).pdf"
-NOTES_TEX   := "Note di lavoro.tex"
-NOTES_PDF   := "$(TARGET)/Note di lavoro.pdf"
+NOTES_TEX   := "$(TITLE) - Note di lavoro.tex"
+NOTES_PDF   := "$(TARGET)/$(TITLE) - Note di lavoro.pdf"
 CONTEXT_TEX := "Contesto informativo.tex"
 CONTEXT_HTML:= "Contesto_informativo.html"
 CONTEXT_TXT := "Contesto informativo.txt"
 
-HTML_DIR    := $(TARGET)/$(subst ",,$(subst $(space),_,$(TITLE)))-epub/OEBPS
-HTML2_DIR   := $(TARGET)/Note_di_lavoro-epub/OEBPS
+TITLE_EPUB	:= $(subst ",,$(subst $(space),_,$(TITLE)))
+HTML_DIR    := $(TARGET)/$(TITLE_EPUB)-epub/OEBPS
+HTML2_DIR   := $(TARGET)/$(TITLE_EPUB)-Note_di_lavoro-epub/OEBPS
 TXT_DIR     := $(TARGET)/txt
 
 TEX_FILES   := $(wildcard *.tex)
