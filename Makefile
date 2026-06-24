@@ -11,7 +11,7 @@ NOTES_TEX   := "$(TITLE) - Note di lavoro.tex"
 NOTES_PDF   := "$(TARGET)/$(TITLE) - Note di lavoro.pdf"
 CONTEXT_TEX := "Contesto informativo.tex"
 CONTEXT_HTML:= "Contesto_informativo.html"
-CONTEXT_TXT := "Contesto informativo.txt"
+CONTEXT_TXT := "$(TARGET)/$(TITLE_ESC) - Contesto informativo.txt"
 
 TITLE_EPUB	:= $(subst ",,$(subst $(space),_,$(TITLE)))
 HTML_DIR    := $(TARGET)/$(TITLE_EPUB)-epub/OEBPS
@@ -43,21 +43,23 @@ spellcheck: txt-spell
 check-guillemets: txt
 	BookAssistant check-guillemets $(DEBUG) target/txt
 
-echo-check: txt
-	BookAssistant echo $(DEBUG) target/txt
-
 stats: txt
 	BookAssistant stats $(TARGET)/txt --latex-toc $(TARGET)/$(TITLE).toc
 
 context: prepare
 	-make4ht -l -c book-latex/make4ht-txt-info.cfg -d $(HTML_DIR) -B $(HTML_DIR) $(CONTEXT_TEX) "xhtml" " -cunihtf -utf8" ""
-	BookAssistant html2txt --output $(TXT_DIR)/$(CONTEXT_TXT) $(HTML_DIR)/$(CONTEXT_HTML)
+	BookAssistant html2txt --output $(CONTEXT_TXT) $(HTML_DIR)/$(CONTEXT_HTML)
+	@$(MAKE) post-clean
 
 ################################ PDF ###########################################################################################################################
-pdf: prepare
+pdf: pdf-book pdf-notes post-clean
+	@true
+
+pdf-book: prepare
 	cd $(TARGET) && lualatex '\def\purpose{pdf}\input{"$(TITLE).tex"}' && lualatex '\def\purpose{pdf}\input{"$(TITLE).tex"}'
+
+pdf-notes: prepare
 	cd $(TARGET) && lualatex '\def\purpose{pdf}\input{"$(NOTES_TEX)"}' && lualatex '\def\purpose{pdf}\input{"$(NOTES_TEX)"}'
-	@$(MAKE) post-clean
 
 ################################ EPUB, XHTML, TXT FILES ########################################################################################################
 #epub: prepare
@@ -96,16 +98,16 @@ HTML_SPELL_FILES := $(wildcard $(HTML_SPELL_DIR)/*.html)
 TXT_SPELL_DIR    := $(TARGET)/txt-spellcheck
 TXT_SPELL_FILES  := $(patsubst $(HTML_SPELL_DIR)/%.html,$(TXT_SPELL_DIR)/%.txt,$(HTML_SPELL_FILES))
 
+html-spell: prepare
+	@mkdir -p $(HTML_SPELL_DIR)
+	-make4ht -l -c book-latex/make4ht-spellcheck.cfg -d $(HTML_SPELL_DIR) -B $(HTML_SPELL_DIR) $(MAIN_TEX) "xhtml" " -cunihtf -utf8" ""
+
 txt-spell: html-spell
 	$(MAKE) txt-spell-files
 	$(MAKE) post-clean
 
 txt-spell-files: $(TXT_SPELL_FILES)
-	@true
-
-html-spell: prepare
-	@mkdir -p $(HTML_SPELL_DIR)
-	-make4ht -l -c book-latex/make4ht-spellcheck.cfg -d $(HTML_SPELL_DIR) -B $(HTML_SPELL_DIR) $(MAIN_TEX) "xhtml" " -cunihtf -utf8" ""
+	find $(TXT_SPELL_DIR) -maxdepth 1 -type f ! -regex '.*/.*ch[0-9][0-9]*\.txt' -delete
 
 # È necessario il passo intermedio in HTML perché html2txt non tocca i file non modificati.
 # Questo fa sì che al passaggio successivo vengano rigenerati solo i file audio necessario.
@@ -113,22 +115,38 @@ html-spell: prepare
 $(TXT_SPELL_DIR)/%.txt: $(HTML_SPELL_DIR)/%.html
 	BookAssistant html2txt --output $@ $<
 
+################################ ECHO REPORT ###################################################################################################################
+ECHO_REPORT_DIR	  := $(TARGET)/echo-reports
+ECHO_REPORT_FILES := $(patsubst $(TXT_DIR)/%.txt,$(ECHO_REPORT_DIR)/%.txt,$(TXT_FILES))
+
+echo-check: 	txt
+	BookAssistant echo $(DEBUG) target/txt/
+
+echo-report: 	txt echo-report-files
+	@true
+
+echo-report-files: $(ECHO_REPORT_FILES)
+	find $(ECHO_REPORT_DIR) -maxdepth 1 -type f ! -regex '.*/.*ch[0-9][0-9]*\.txt' -delete
+
+$(ECHO_REPORT_DIR)/%.txt: $(TXT_DIR)/%.txt
+	BookAssistant echo $(DEBUG) --no-colour --print-all-lines $< > $@
+
 ################################ TXT AUDIO FILES ###############################################################################################################
 HTML_AUDIO_DIR   := $(TARGET)/html-audio
 HTML_AUDIO_FILES := $(wildcard $(HTML_AUDIO_DIR)/*.html)
 TXT_AUDIO_DIR    := $(TARGET)/txt-audio
 TXT_AUDIO_FILES  := $(patsubst $(HTML_AUDIO_DIR)/%.html,$(TXT_AUDIO_DIR)/%.txt,$(HTML_AUDIO_FILES))
 
+html-audio: prepare
+	@mkdir -p $(HTML_AUDIO_DIR)
+	-make4ht -l -c book-latex/make4ht-audio.cfg -d $(HTML_AUDIO_DIR) -B $(HTML_AUDIO_DIR) $(MAIN_TEX) "xhtml" " -cunihtf -utf8" ""
+
 txt-audio: html-audio
 	@$(MAKE) txt-audio-files
 	@$(MAKE) post-clean
 
 txt-audio-files: $(TXT_AUDIO_FILES)
-	@true
-
-html-audio: prepare
-	@mkdir -p $(HTML_AUDIO_DIR)
-	-make4ht -l -c book-latex/make4ht-audio.cfg -d $(HTML_AUDIO_DIR) -B $(HTML_AUDIO_DIR) $(MAIN_TEX) "xhtml" " -cunihtf -utf8" ""
+	find $(TXT_AUDIO_DIR) -maxdepth 1 -type f ! -regex '.*/.*ch[0-9][0-9]*\.txt' -delete
 
 # È necessario il passo intermedio in HTML perché html2txt non tocca i file non modificati.
 # Questo fa sì che al passaggio successivo vengano rigenerati solo i file audio necessario.
@@ -172,7 +190,7 @@ clean:
 	@rm -rfv $(TARGET)
 
 post-clean:
-	@rm -f $(TARGET)/*.{tex,aux,log,out,dvi}
+	@rm -f $(TARGET)/*.{tex,aux,out,dvi}
 	@rm -f $(TARGET)/*.{4ct,4tc,epub,html,css,idv,lg,ncx,opf,tmp,xdv,xref}
 
 $(TARGET):

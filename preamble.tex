@@ -27,6 +27,12 @@
 \usepackage{luacode}
 \usepackage{xr-hyper}
 
+% Prevents: Package hyperref Warning: Token not allowed in a PDF string (Unicode): (hyperref)  removing `\\' on input line XYZ.
+\pdfstringdefDisableCommands{%
+    \renewcommand{\\}{ }%
+    \renewcommand{\lowercase}[1]{#1}%
+}
+
 \newcommand{\mytitle}{Titolo temporaneo}
 
 % Dimensioni pagina
@@ -38,6 +44,8 @@
     inner=2.5cm,%
     outer=1.8cm,%
 }
+\setlength{\headheight}{13.6pt}
+\addtolength{\topmargin}{-1.6pt}
 
 \raggedbottom
 
@@ -68,7 +76,7 @@
 \fancypagestyle{plain}{%
     \fancyhf{}                                  % pulisce tutto
     \renewcommand{\headrulewidth}{0pt}          % nessuna linea
-    \fancyfoot[LE,RO]{\thepage}                 % numero pagina all’esterno ANCHE sulla prima pagina del capitolo
+    \fancyfoot[LE,RO]{\thepage}                 % numero pagina all'esterno ANCHE sulla prima pagina del capitolo
 }
 
 \fancyfoot[LE,RO]{\thepage}                     % Footer numero pagina all'esterno
@@ -118,7 +126,7 @@
 
 \setlist{%
     parsep   = 0pt,                             % spazio tra paragrafi dentro un item (se usi \par)
-    itemsep  = 0pt,                             % spazio verticale tra un item e l’altro ← QUESTO È IL PRINCIPALE
+    itemsep  = 0pt,                             % spazio verticale tra un item e l'altro ← QUESTO È IL PRINCIPALE
 }
 
 % \setmainfont{BaskervilleF}[%                    % Richiesto per small caps
@@ -157,11 +165,23 @@
 \setlength{\parindent}{0.3cm}
 
 \renewcommand{\cfttoctitlefont}{\relax}         % non stampa nulla
+% \renewcommand{\cfttoctitlefont}{\hfill\Large\scshape}
 \setlength{\cftbeforetoctitleskip}{-4em}        % elimina spazio sopra (regola se serve)
 \setlength{\cftaftertoctitleskip}{0em}          % elimina spazio sotto
 \renewcommand{\contentsname}{}                  % titolo vuoto
 \renewcommand{\cftchapfont}{\normalfont}        % capitoli
 \renewcommand{\cftchappagefont}{\normalfont}    % capitoli
+
+\makeatletter
+\let\footnote@original\footnote
+\renewcommand{\footnote}[1]{%
+    \ifnum\pdf@strcmp{\detokenize\expandafter{\purpose}}{audio}=0
+    % nulla
+    \else
+        \footnote@original{#1}%
+    \fi
+}
+\makeatother
 
 % Comandi personalizzati
 \newcommand{\threestars}{%
@@ -317,6 +337,32 @@
     \end{quoting}%
 }%
 
+% Citazione semplice:                                               \smartquotation{Testo.}
+% Citazione con font diverso:                                       \smartquotation[][][\normalfont]{Testo.}
+% Citazione con voce esplicita per l'audio:                         \smartquotation[Nome speaker]{Testo.}
+% Citazione con voce esplicita per l'audio e testo alternativo:     \smartquotation[Nome speaker][Testo per l'audio.][\normalfont]{Testo.}
+\makeatletter
+\NewDocumentCommand{\smartquotation}{O{} O{} O{\itshape} m}{%
+    \ifnum\pdf@strcmp{\detokenize\expandafter{\purpose}}{audio}=0
+    \ifx\relax#1\relax
+    \ifx\relax#2\relax
+    #4%
+    \else
+        #2%
+    \fi
+    \else
+        \ifx\relax#2\relax
+        \spoken{#1}{#4}{}%
+        \else
+            \spoken{#1}{#2}{}%
+        \fi
+    \fi
+    \else
+        \quotationx[#3]{#4}%
+    \fi
+}
+\makeatother
+
 \usepackage{relsize}
 
 \newcommand{\newspaper}[1]{%
@@ -418,7 +464,7 @@
     \begin{flushleft}%
     \textit{%
         Questa è un'opera di fantasia.
-        Nomi, personaggi ed eventi sono prodotto dell'immaginazione dell’autore.
+        Nomi, personaggi ed eventi sono prodotto dell'immaginazione dell'autore.
         Qualsiasi somiglianza con persone reali, vive o morte, con eventi esistenti è puramente casuale.
     }
     \end{flushleft}%
@@ -604,7 +650,8 @@
     \endgroup%
 }
 
-\newcommand{\newspapername}[1]{#1}%
+\newcommand{\newspapername}[1]{``#1''}%
+\newcommand{\workofartname}[1]{\emph{#1}}%
 
 \makeatletter
 \newcommand{\chapterref}[1]{%
@@ -702,17 +749,22 @@
     \ifblank{#1}{#2}{#1: #2}%
     }%
 }
+
+% Valori globali di default per data e ora delle scene
+\gdef\scenemeta@lastdate{1970-01-01}
+\gdef\scenemeta@lasttime{00:00}
+
 \define@key{scenemeta}{name}{\def\scenemeta@name{#1}}
 \define@key{scenemeta}{setting}{\def\scenemeta@setting{#1}}
-\define@key{scenemeta}{date}{\def\scenemeta@date{#1}}
-\define@key{scenemeta}{time}{\def\scenemeta@time{#1}}
+\define@key{scenemeta}{date}{\ifblank{#1}{}{\gdef\scenemeta@lastdate{#1}}}
+\define@key{scenemeta}{time}{\ifblank{#1}{}{\gdef\scenemeta@lasttime{#1}}}
 
 \newcommand{\scene}[1][]{%
     \def\scenemeta@name{}%
     \def\scenemeta@setting{}%
-    \def\scenemeta@date{}%
-    \def\scenemeta@time{}%
     \setkeys{scenemeta}{#1}%
+    \let\scenemeta@date\scenemeta@lastdate
+    \let\scenemeta@time\scenemeta@lasttime
     \refstepcounter{section}%
     \addcontentsline{toc}{section}{
         \scenemeta@name\\
@@ -755,25 +807,35 @@ focus}{\shotmeta@focus}}
 
 \newcommand{\sceneToday}{}
 
+\newcommand{\hidenextfromtoc}{\addtocontents{toc}{\protect\gobblenextcontentsline}}
+\newcommand{\gobblenextcontentsline}{%
+\let\hiddensavedcontentsline\contentsline
+\renewcommand\contentsline[4]{\let\contentsline\hiddensavedcontentsline}%
+}
+
 % Titolo, autore, illustrazione copertina, epigrafe, file capitoli
 \newcommand{\mybook}[5]{
     \title{#1}
     \author{#2}
     \begin{document}
         \frontmatter
-        \cover{#1}{#2}{#3} % FIXME: maketitle?
+        \cover{#1}{#2}{#3} % FIXME: \maketitle o \begin{titlepage}?
         \disclaimer
-        \epigraph{#4}
         \mainmatter
+        \epigraph{#4}
         \input{#5}
         \cleardoublepage
-        \blankpage
-        \cleardoublepage
-        \addcontentsline{toc}{chapter}{Indice}
+        \backmatter
+        \hidenextfromtoc                                            % Non renderizzare la prossima voce
+        \addcontentsline{toc}{chapter}{Indice}  % Inserisci l'informazione nel TOC, serve a 'stats' per calcolare il numero di pagine
         \setcounter{tocdepth}{0}
+        \renewcommand{\contentsname}{}%  Cancella un override di babel
         \tableofcontents
+        \cleardoublepage
     \end{document}
 }
+
+\newcommand{\suppressed}[1]{}%
 
 \newcommand{\Pffft}{Pffft\ellipsis}
 \newcommand{\Mmmh}{Mmmh\ellipsis}

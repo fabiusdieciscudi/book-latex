@@ -1,5 +1,25 @@
 \usepackage{booktabs}
 \usepackage{amssymb}
+\usepackage{tikz}
+\usetikzlibrary{graphs, graphdrawing, arrows.meta}
+\usegdlibrary{layered}
+\usepackage{wrapfig2}
+
+\newcommand{\portrait}[1]{%
+    \ifthenelse{\boolean{illustrations}}{%
+        \leavevmode%
+        \begin{wrapfigure}{r}{0.4\textwidth}%
+        \vspace{-\intextsep}%
+        \includegraphics[width=0.4\textwidth]{#1}%
+        \end{wrapfigure}%
+    }{}%
+}%
+
+\newcommand{\footnoteurl}[2][]{%
+    \footnote{#1{\hypersetup{pdfborder={0 0 0},pdfborderstyle={}}%
+    \href{#2}{\expandafter\nolinkurl\expandafter{\detokenize{#2}}}}}}%
+\urlstyle{same}
+\renewcommand{\UrlFont}{\rmfamily\itshape}
 
 \renewcommand{\thesection}{\arabic{section}}
 \renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
