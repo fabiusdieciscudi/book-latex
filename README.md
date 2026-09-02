@@ -48,6 +48,8 @@ lualatex  make4ht (three separate configs)
 
 **Foreign language handling.** `\frenchname`, `\englishname`, etc. call `\myforeignlanguage`, which in `pdf` mode delegates to Babel's `\foreignlanguage` for correct hyphenation, and in `spellcheck` mode emits language-change markers instead. These commands must not be used inside `\chapter` arguments, as they are fragile in moving contexts.
 
+**Book structure.** `\book[key=value, ...]` builds the whole book following publishing conventions: half title, its verso ("Dello stesso autore"), title page, copyright page (colophon with copyright, edition, ISBN, credits and the fiction disclaimer), dedication, optional extra front matter, the epigraph (opening the main matter on page 1, as in `\mybook`), the chapters, optional back matter, table of contents and a final "Finito di stampare" note. Only `title`, `author` and `chapters` are required; every other page appears only when its key is given (the disclaimer defaults to `\disclaimertext` and is removed with `disclaimer={}`). Each part starts on a recto and blank versos carry no header or page number. Under tex4ht (ebook and text outputs) there is no half title and no blank page; in `audio` mode the half title, "Dello stesso autore", the technical colophon data, the publisher and the print note are omitted. The full key list is documented next to the command in `preamble.tex`. The older positional `\mybook` is unchanged.
+
 ---
 
 ## Makefile goals

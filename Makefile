@@ -9,6 +9,7 @@ MAIN_TEX    := "$(TITLE_ESC).tex"
 MAIN_PDF    := "$(TARGET)/$(TITLE_ESC).pdf"
 NOTES_TEX   := "$(TITLE) - Note di lavoro.tex"
 NOTES_PDF   := "$(TARGET)/$(TITLE) - Note di lavoro.pdf"
+COVER_TEX   := "$(TITLE) - Copertina.tex"
 CONTEXT_TEX := "Contesto informativo.tex"
 CONTEXT_HTML:= "Contesto_informativo.html"
 CONTEXT_TXT := "$(TARGET)/$(TITLE_ESC) - Contesto informativo.txt"
@@ -52,37 +53,48 @@ context: prepare
 	@$(MAKE) post-clean
 
 ################################ PDF ###########################################################################################################################
-pdf: pdf-book pdf-notes post-clean
-	@true
+pdf: do-pdf-book do-pdf-notes do-pdf-cover post-clean
 
-pdf-book: prepare
+pdf-book: do-pdf-book post-clean
+
+pdf-notes: do-pdf-notes post-clean
+
+pdf-cover: do-pdf-cover post-clean
+
+do-pdf-book: prepare
 	cd $(TARGET) && lualatex '\def\purpose{pdf}\input{"$(TITLE).tex"}' && lualatex '\def\purpose{pdf}\input{"$(TITLE).tex"}'
 
-pdf-notes: prepare
+do-pdf-notes: prepare
 	cd $(TARGET) && lualatex '\def\purpose{pdf}\input{"$(NOTES_TEX)"}' && lualatex '\def\purpose{pdf}\input{"$(NOTES_TEX)"}'
 
+do-pdf-cover: prepare
+	cd $(TARGET) && lualatex '\input{"$(COVER_TEX)"}' && lualatex '\input{"$(COVER_TEX)"}'
+
 ################################ EPUB, XHTML, TXT FILES ########################################################################################################
-#epub: prepare
-#	$(MAKE) post-clean
-#	cd $(TARGET) && tex4ebook -l -c ../book-latex/tex4ebook.cfg $(MAIN_TEX)
-#	cd $(TARGET) && tex4ebook -l -c ../book-latex/tex4ebook.cfg $(NOTES_TEX)
-#	$(MAKE) post-clean
-#
+epub: do-epub post-clean
+
+do-epub: prepare
+	cd $(TARGET) && tex4ebook -l -c book-latex/tex4ebook.cfg -e comuni/fonts.mk4 $(MAIN_TEX)
+
 ################################ TXT FILES #####################################################################################################################
 HTML_DIR    	:= $(TARGET)/html
 HTML_FILES 		:= $(wildcard $(HTML_DIR)/*.html)
 TXT_DIR    		:= $(TARGET)/txt
 TXT_FILES  		:= $(patsubst $(HTML_DIR)/%.html,$(TXT_DIR)/%.txt,$(HTML_FILES))
 
-txt: html
-	mkdir -p $(TXT_DIR)
+txt: do-txt post-clean
+
+do-txt: do-html
+	@mkdir -p $(TXT_DIR)
 	@$(MAKE) txt-files
 	@$(MAKE) post-clean
 
 txt-files: $(TXT_FILES)
 	@true
 
-html: prepare
+html: do-html post-clean
+
+do-html: prepare
 	@mkdir -p $(HTML_DIR)
 	-make4ht -l -c book-latex/make4ht-txt.cfg -d $(HTML_DIR) -B $(HTML_DIR) $(MAIN_TEX) "xhtml" " -cunihtf -utf8" ""
 
@@ -190,10 +202,12 @@ clean:
 	@rm -rfv $(TARGET)
 
 post-clean:
+	@echo "Post clean..."
 	@rm -f $(TARGET)/*.{tex,aux,out,dvi}
 	@rm -f $(TARGET)/*.{4ct,4tc,epub,html,css,idv,lg,ncx,opf,tmp,xdv,xref}
+	@find $(TARGET) -type l -exec rm -f {} \;
 
 $(TARGET):
 	@mkdir -p $(TARGET)
 
-.PHONY: all txt clean post-clean install
+.PHONY: all txt epub clean post-clean install
