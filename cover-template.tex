@@ -1,0 +1,146 @@
+% =====================================================================
+%  Copertina Lulu  --  comando \cover[chiave=valore]
+%  Default: 6"x9" (152.4x228.6 mm), dorso 0.898" (372 pagine).
+%  Le dimensioni sono in POLLICI (numeri puri).
+% =====================================================================
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{tikz}                 % carica anche pgfmath e pgfkeys
+\usetikzlibrary{calc}
+\pagestyle{empty}\setlength{\parindent}{0pt}
+
+\usepackage{fontspec}
+
+% ---------------------------------------------------------------------
+%  Imposta la dimensione fisica della pagina (indipendente da geometry,
+%  cosi' puo' essere decisa dal comando). Engine-agnostico.
+% ---------------------------------------------------------------------
+\newcommand{\cvrsetpage}[2]{%
+    \setlength{\paperwidth}{#1}\setlength{\paperheight}{#2}%
+    \ifdefined\pagewidth    \pagewidth=#1\relax    \pageheight=#2\relax    \fi
+    \ifdefined\pdfpagewidth \pdfpagewidth=#1\relax \pdfpageheight=#2\relax \fi
+}
+
+% =====================================================================
+%  Comando  \cover[ chiave=valore, ... ]
+% =====================================================================
+\newif\ifcvrguides   % linee guida on/off
+\newif\ifcvrbc       % riquadro barcode on/off
+\pgfkeys{
+    /cvr/.cd,
+% --- geometria (pollici) ---
+    trimw/.initial=6,          % larghezza trim
+    trimh/.initial=9,          % altezza trim
+    spinewidth/.initial=0.898, % larghezza dorso (NB: numero, non testo)
+    bleed/.initial=0.125,      % abbondanza per lato
+    safety/.initial=0.5,       % margine di sicurezza dal trim
+    spinesafe/.initial=0.0625, % rientro sicurezza sul dorso
+    bcw/.initial=3.622,        % larghezza area barcode
+    bch/.initial=1.26,         % altezza area barcode
+    bcup/.initial=0.5,         % distanza barcode dal taglio (trim) inferiore
+% --- contenuti ---
+    title/.initial=,           % titolo (fronte)
+    subtitle/.initial=,        % sottotitolo (fronte)
+    author/.initial=,          % autore (fronte, in basso)
+    back/.initial=,            % testo di quarta (retro)
+    imprint/.initial=,         % editore / sito (retro, sopra il barcode)
+    spine/.initial=,           % testo del dorso (verticale)
+    bgcolor/.initial=white,    % colore di fondo (bleed incluso)
+% --- interruttori ---
+    barcode/.code={\csname cvrbc#1\endcsname},     % barcode=true|false
+    guides/.code={\csname cvrguides#1\endcsname},  % guides=true|false
+}
+\newcommand{\cvrget}[1]{\pgfkeysvalueof{/cvr/#1}}
+
+\newcommand{\cover}[1][]{%
+% 1) default + chiavi utente (in due chiamate: evita il bug dell'a-capo)
+    \cvrguidestrue\cvrbctrue
+    \pgfkeys{/cvr/.cd, trimw=6, trimh=9, spinewidth=0.898, bleed=0.125,
+        safety=0.5, spinesafe=0.0625, bcw=3.622, bch=1.26, bcup=0.5,
+        title=, subtitle=, author=, back=, imprint=, spine=, bgcolor=white}%
+    \pgfkeys{/cvr/.cd,#1}%
+    % 2) coordinate derivate (origine in basso a sinistra)
+    \pgfmathsetmacro\clDOCW{2*\cvrget{bleed}+2*\cvrget{trimw}+\cvrget{spinewidth}}
+    \pgfmathsetmacro\clDOCH{2*\cvrget{bleed}+\cvrget{trimh}}
+    \pgfmathsetmacro\clBACKL{\cvrget{bleed}}
+    \pgfmathsetmacro\clBACKR{\cvrget{bleed}+\cvrget{trimw}}
+    \pgfmathsetmacro\clSPL{\clBACKR}
+    \pgfmathsetmacro\clSPR{\clBACKR+\cvrget{spinewidth}}
+    \pgfmathsetmacro\clFRONTL{\clSPR}
+    \pgfmathsetmacro\clFRONTR{\clSPR+\cvrget{trimw}}
+    \pgfmathsetmacro\clTRIMB{\cvrget{bleed}}
+    \pgfmathsetmacro\clTRIMT{\cvrget{bleed}+\cvrget{trimh}}
+    \pgfmathsetmacro\clBACKSL{\clBACKL+\cvrget{safety}}
+    \pgfmathsetmacro\clBACKSR{\clBACKR-\cvrget{safety}}
+    \pgfmathsetmacro\clFRONTSL{\clFRONTL+\cvrget{safety}}
+    \pgfmathsetmacro\clFRONTSR{\clFRONTR-\cvrget{safety}}
+    \pgfmathsetmacro\clSAFEB{\clTRIMB+\cvrget{safety}}
+    \pgfmathsetmacro\clSAFET{\clTRIMT-\cvrget{safety}}
+    \pgfmathsetmacro\clSPSL{\clSPL+\cvrget{spinesafe}}
+    \pgfmathsetmacro\clSPSR{\clSPR-\cvrget{spinesafe}}
+    \pgfmathsetmacro\clBCR{\clBACKSR}
+    \pgfmathsetmacro\clBCL{\clBACKSR-\cvrget{bcw}}
+    \pgfmathsetmacro\clBCB{\clTRIMB+\cvrget{bcup}}
+    \pgfmathsetmacro\clBCT{\clBCB+\cvrget{bch}}
+    \pgfmathsetmacro\clTW{\cvrget{trimw}-2*\cvrget{safety}}  % larghezza utile
+    \pgfmathsetmacro\clTH{\cvrget{trimh}-2*\cvrget{safety}}  % altezza utile
+    % 3) dimensione fisica della pagina
+    \cvrsetpage{\clDOCW in}{\clDOCH in}%
+    % 4) disegno
+    \begin{tikzpicture}[x=1in, y=1in, remember picture, overlay]
+    \coordinate (O) at (current page.south west);
+    \begin{scope}[shift={(O)}]
+
+    % sfondo: copre l'intero documento, bleed incluso
+    \edef\cvrbg{\cvrget{bgcolor}}%
+    \fill[fill=\cvrbg] (0,0) rectangle (\clDOCW,\clDOCH);
+
+    \ifcvrguides
+    \draw[cyan!70,thick]   (0,0) rectangle (\clDOCW,\clDOCH);
+    \draw[red,thick]       (\clBACKL,\clTRIMB) rectangle (\clFRONTR,\clTRIMT);
+    \draw[magenta,thick]   (\clSPL,\clTRIMB) -- (\clSPL,\clTRIMT);
+    \draw[magenta,thick]   (\clSPR,\clTRIMB) -- (\clSPR,\clTRIMT);
+    \draw[blue!60,dashed]  (\clBACKSL,\clSAFEB)  rectangle (\clBACKSR,\clSAFET);
+    \draw[blue!60,dashed]  (\clFRONTSL,\clSAFEB) rectangle (\clFRONTSR,\clSAFET);
+    \draw[magenta!50,dashed](\clSPSL,\clSAFEB)   rectangle (\clSPSR,\clSAFET);
+    \node[cyan!60!black,font=\scriptsize,anchor=north west]
+    at (0.06,\clDOCH-0.06) {Documento con bleed};
+    \node[red,font=\scriptsize,anchor=south]
+    at ($(\clBACKL,\clTRIMT)!0.5!(\clSPL,\clTRIMT)$) {RETRO};
+    \node[red,font=\scriptsize,anchor=south]
+    at ($(\clSPR,\clTRIMT)!0.5!(\clFRONTR,\clTRIMT)$) {FRONTE};
+    \fi
+
+    \ifcvrbc
+    \draw[orange,thick] (\clBCL,\clBCB) rectangle (\clBCR,\clBCT);
+    \node[orange!80!black,font=\footnotesize]
+    at ($(\clBCL,\clBCB)!0.5!(\clBCR,\clBCT)$) {AREA BARCODE};
+    \fi
+
+% FRONTE: titolo
+    \node[anchor=north, text width=\clTW in, align=left]
+    at ($(\clFRONTSL,\clSAFET)!0.5!(\clFRONTSR,\clSAFET)$)
+        {\bfseries\Huge \cvrget{title}\\[6pt]
+    \normalfont\normalsize \cvrget{subtitle}};
+    % FRONTE: autore
+    \node[anchor=south, inner sep=0pt, text width=\clTW in, align=center]
+    at ($(\clFRONTSL,\clSAFEB)!0.5!(\clFRONTSR,\clSAFEB)$)
+        {\Large \cvrget{author}};
+    % RETRO: quarta
+    \node[anchor=north west, inner sep=0pt, text width=\clTW in, align=left]
+    at (\clBACKSL,\clSAFET) {\cvrget{back}};
+    % RETRO: editore
+    \node[anchor=south west, inner sep=0pt, text width=1.6in, align=left]
+    at (\clBACKSL,\clBCB) {\footnotesize \cvrget{imprint}};
+    % DORSO
+    \node[rotate=90, text width=\clTH in, align=center]
+    at ($(\clSPL,\clTRIMB)!0.5!(\clSPR,\clTRIMT)$) {\cvrget{spine}};
+
+    \end{scope}
+    \end{tikzpicture}%
+}
+
+% fattore di scala rispetto al formato di riferimento 6x9
+\newcommand{\cvrk}{\fpeval{\cvrget{trimw}/6}}
+% \relativefontsize{corpo}{interlinea}: come \fontsize...\selectfont, ma scalato
+\newcommand{\relativefontsize}[2]{\fontsize{\fpeval{#1*\cvrk}}{\fpeval{#2*\cvrk}}\selectfont}
