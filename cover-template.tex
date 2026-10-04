@@ -26,6 +26,7 @@
 % =====================================================================
 \newif\ifcvrguides   % linee guida on/off
 \newif\ifcvrbc       % riquadro barcode on/off
+\newsavebox{\cvrfcbox} % immagine del fronte
 \pgfkeys{
     /cvr/.cd,
 % --- geometria (pollici) ---
@@ -46,6 +47,7 @@
     imprint/.initial=,         % editore / sito (retro, sopra il barcode)
     spine/.initial=,           % testo del dorso (verticale)
     bgcolor/.initial=white,    % colore di fondo (bleed incluso)
+    frontcover/.initial=,      % immagine sul fronte rifilato (senza bleed), sotto i testi
 % --- interruttori ---
     barcode/.code={\csname cvrbc#1\endcsname},     % barcode=true|false
     guides/.code={\csname cvrguides#1\endcsname},  % guides=true|false
@@ -57,7 +59,8 @@
     \cvrguidestrue\cvrbctrue
     \pgfkeys{/cvr/.cd, trimw=6, trimh=9, spinewidth=0.898, bleed=0.125,
         safety=0.5, spinesafe=0.0625, bcw=3.622, bch=1.26, bcup=0.5,
-        title=, subtitle=, author=, back=, imprint=, spine=, bgcolor=white}%
+        title=, subtitle=, author=, back=, imprint=, spine=, bgcolor=white,
+        frontcover=}%
     \pgfkeys{/cvr/.cd,#1}%
     % 2) coordinate derivate (origine in basso a sinistra)
     \pgfmathsetmacro\clDOCW{2*\cvrget{bleed}+2*\cvrget{trimw}+\cvrget{spinewidth}}
@@ -86,6 +89,15 @@
     \pgfmathsetmacro\clTH{\cvrget{trimh}-2*\cvrget{safety}}  % altezza utile
     % 3) dimensione fisica della pagina
     \cvrsetpage{\clDOCW in}{\clDOCH in}%
+    % immagine del fronte: scalata per coprire il pannello rifilato (dal dorso al taglio
+    % esterno, senza abbondanza) mantenendo le proporzioni; l'eccedenza viene tagliata
+    \pgfkeysgetvalue{/cvr/frontcover}\cvrfc
+    \ifx\cvrfc\empty\else
+        \sbox{\cvrfcbox}{\includegraphics[width=\cvrget{trimw} in]{\cvrfc}}%
+        \ifdim\dimexpr\ht\cvrfcbox+\dp\cvrfcbox\relax<\cvrget{trimh} in
+            \sbox{\cvrfcbox}{\includegraphics[height=\cvrget{trimh} in]{\cvrfc}}%
+        \fi
+    \fi
     % 4) disegno
     \begin{tikzpicture}[x=1in, y=1in, remember picture, overlay]
     \coordinate (O) at (current page.south west);
@@ -94,6 +106,15 @@
     % sfondo: copre l'intero documento, bleed incluso
     \edef\cvrbg{\cvrget{bgcolor}}%
     \fill[fill=\cvrbg] (0,0) rectangle (\clDOCW,\clDOCH);
+
+    % FRONTE: immagine sul pannello rifilato (l'abbondanza resta del colore di fondo)
+    \ifx\cvrfc\empty\else
+    \begin{scope}
+    \clip (\clFRONTL,\clTRIMB) rectangle (\clFRONTR,\clTRIMT);
+    \node[inner sep=0pt, anchor=center]
+    at ($(\clFRONTL,\clTRIMB)!0.5!(\clFRONTR,\clTRIMT)$) {\usebox{\cvrfcbox}};
+    \end{scope}
+    \fi
 
     \ifcvrguides
     \draw[cyan!70,thick]   (0,0) rectangle (\clDOCW,\clDOCH);
@@ -120,7 +141,7 @@
 % FRONTE: titolo
     \node[anchor=north, text width=\clTW in, align=left]
     at ($(\clFRONTSL,\clSAFET)!0.5!(\clFRONTSR,\clSAFET)$)
-        {\bfseries\Huge \cvrget{title}\\[6pt]
+        {\Huge \cvrget{title}\\[6pt]
     \normalfont\normalsize \cvrget{subtitle}};
     % FRONTE: autore
     \node[anchor=south, inner sep=0pt, text width=\clTW in, align=center]
@@ -133,7 +154,7 @@
     \node[anchor=south west, inner sep=0pt, text width=1.6in, align=left]
     at (\clBACKSL,\clBCB) {\footnotesize \cvrget{imprint}};
     % DORSO
-    \node[rotate=90, text width=\clTH in, align=center]
+    \node[rotate=90, text width=\clTH in, align=flush center]
     at ($(\clSPL,\clTRIMB)!0.5!(\clSPR,\clTRIMT)$) {\cvrget{spine}};
 
     \end{scope}
